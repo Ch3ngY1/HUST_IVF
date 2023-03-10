@@ -1,0 +1,63 @@
+--- /data2/chengyi/myproject/SourceCode/models/Res_plus_p3d_plus_LSTM.py
++++ /data2/chengyi/myproject/SourceCode/models/Res_plus_p3d_plus_LSTM.py
+@@ -34,10 +34,10 @@
+             lstm_in = feature[i]
+             if i == 0:
+                 h_x, c_x = self.lstm(lstm_in)  # h_x: N * hidden, c_x: N * hidden
+-                # # Long Time Info ===================================
++                # Long Time Info ===================================
+                 # previous_information = h_x.unsqueeze(dim=0)
+                 # previous_usage = torch.tensor([1.]).cuda()
+-                # # Long Time Info ===================================
++                # Long Time Info ===================================
+             else:
+                 if self.c_trans:
+                     previous_state = c_x
+@@ -46,13 +46,12 @@
+                 h_x, c_x = self.lstm(lstm_in, (h_x, c_x))  # h_x: N * hidden, c_x: N * hidden
+ 
+ 
+-                # # Long Time Info ===================================
+-                # # added_previous_information = torch.sum(torch.stack([x*y for x,y in zip(previous_information, previous_usage)]),dim=0)/(torch.sum(previous_usage))
+-                # added_previous_information = torch.sum(
+-                #     torch.stack([x * y for x, y in zip(previous_information, previous_usage)]), dim=0) / i
+-                # # shape = N * hidden
++                # Long Time Info ===================================
++                # added_previous_information = torch.sum(torch.stack([x*y for x,y in zip(previous_information, previous_usage)]),dim=0)/(torch.sum(previous_usage))
++
++                # shape = N * hidden
+                 # previous_information = torch.cat([previous_information, h_x.unsqueeze(dim=0)], dim=0)
+-                # # Long Time Info ===================================
++                # Long Time Info ===================================
+ 
+ 
+ 
+@@ -60,12 +59,12 @@
+                 use = self.fc_use(h_x) # N * 2: prob: [use_previous, use_current]
+                 # use = self.fc_use(h_x-previous_state)
+ 
+-                use = F.gumbel_softmax(use, tau=0.5, hard=False)
++                use = F.gumbel_softmax(use, tau=1, hard=False)
+ 
+                 # TODO: 一直用的是False，改为True试试看
+-                # # Long Time Info ===================================
++                # Long Time Info ===================================
+                 # previous_usage = torch.cat([previous_usage, use[:, 1]])
+-                # # Long Time Info ===================================
++                # Long Time Info ===================================
+                 # matrix multiple, use gumbel softmax
+ 
+                 # watch.append(torch.argmax(use))
+@@ -81,10 +80,10 @@
+                     # LSTM long time information:
+                     # h_x = (h_x + added_previous_information)/2
+                     # 无法拟合：
+-                    # # =============================================================
++                    # =============================================================
+                     # h_x_cat = torch.cat([h_x, added_previous_information], dim=1)
+                     # h_x = self.fc_longtime(h_x_cat)
+-                    # # =============================================================
++                    # =============================================================
+                 # h_x = [h_x_previous, h_x] * use
+             cell.append(self.fc_pred_c(c_x))
+             hidden.append(self.fc_pred(h_x))
